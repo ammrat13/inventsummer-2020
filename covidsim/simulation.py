@@ -14,6 +14,7 @@ import numpy as np
 # Needed for plotting
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.image as image
 
 
 class Simulation:
@@ -32,15 +33,20 @@ class Simulation:
       self,
       pop_size: int,
       initial_cases_prob: float,
+      hospital_beds_ratio: float = .003,
       infection_distance: np.float64 = 27.0,
       map_size: np.float64 = 100.0,
     ) -> None:
+
+        # Simulation starts at time t=0
+        self.time: int = 0
 
         # Keep track of the population size for this simulation
         self.pop_size: int = pop_size
         # Also the other parameters given
         self.map_size: np.float64 = map_size
         self.infection_distance: np.float64 = infection_distance
+        self.hospital_beds_ratio: float = hospital_beds_ratio
 
         # Position and health of everyone in the population
         self.positions: np.ndarray = \
@@ -62,6 +68,9 @@ class Simulation:
         initial_cases: int = ceil( self.pop_size * initial_cases_prob )
         self.healths[0:initial_cases] = Simulation.INFECTED
 
+        # Keep track of the statistics too
+        self.case_stats: List[int] = []
+
         # Create the figure for plotting
         self.fig = plt.figure(figsize=(16,9))
         # Add a grid for layout
@@ -69,8 +78,19 @@ class Simulation:
         # Add the map and statistics
         self.map_ax = self.fig.add_subplot(grid[0:,1:])
         self.stats_ax = self.fig.add_subplot(grid[0,0])
+        # Add labels
+        self.stats_ax.set_xlabel('Time')
+        self.stats_ax.set_ylabel('Cases')
         # Call for updates
-        self.ani = animation.FuncAnimation(self.fig, self.tick_map, init_func=self.init_map)
+        self.map_ani = \
+            animation.FuncAnimation(
+                self.fig,
+                self.tick_map,
+                init_func=self.init_map)
+        self.stats_ani = \
+            animation.FuncAnimation(
+                self.fig,
+                self.tick_stats)
 
 
     # Makes everyone take a step in a random direction with a given mean of
@@ -120,6 +140,10 @@ class Simulation:
 
     # Functions for initializing and updating the map
     def init_map(self):
+        self.map_ax.imshow(
+            image.imread('map.png'),
+            extent=[0, self.map_size, 0, self.map_size],
+            aspect='auto')
         self.scatter = \
             self.map_ax.scatter(
                 x=self.positions[:,0],
@@ -132,6 +156,16 @@ class Simulation:
         self.scatter.set_facecolor(self.health_colors())
         self.scatter.set_offsets(self.positions)
         return self.scatter
+
+    # Same for the statistics
+    def tick_stats(self, _):
+        self.time += 1
+        self.case_stats.append(
+            np.count_nonzero(self.healths != Simulation.HEALTHY))
+        self.stats_ax.clear()
+        self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
+        self.stats_ax.plot(range(self.time), self.case_stats, 'blue')
+
 
 
 if __name__ == '__main__':
