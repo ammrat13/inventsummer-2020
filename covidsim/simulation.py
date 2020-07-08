@@ -11,6 +11,10 @@ from math import ceil
 # Needed for efficient distance calculation
 import numpy as np
 
+# Needed for plotting
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 
 class Simulation:
 
@@ -58,6 +62,16 @@ class Simulation:
         initial_cases: int = ceil( self.pop_size * initial_cases_prob )
         self.healths[0:initial_cases] = Simulation.INFECTED
 
+        # Create the figure for plotting
+        self.fig = plt.figure(figsize=(16,9))
+        # Add a grid for layout
+        grid = self.fig.add_gridspec(nrows=3, ncols=4)
+        # Add the map and statistics
+        self.map_ax = self.fig.add_subplot(grid[0:,1:])
+        self.stats_ax = self.fig.add_subplot(grid[0,0])
+        # Call for updates
+        self.ani = animation.FuncAnimation(self.fig, self.tick_map, init_func=self.init_map)
+
 
     # Makes everyone take a step in a random direction with a given mean of
     #  step length
@@ -75,12 +89,12 @@ class Simulation:
     #  number of infected people person i is within self.infection_distance of
     def people_transmitting(self) -> np.ndarray:
         # Compute the distance between everyone
-        distVectors = self.positions - self.positions.reshape((self.pop_size,1,2))
-        distMat = np.sqrt(np.sum(distVectors**2, axis=2))
+        distVectors: np.ndarray = self.positions - self.positions.reshape((self.pop_size,1,2))
+        distMat: np.ndarray = np.sqrt(np.sum(distVectors**2, axis=2))
         # Figure out whether a person can be infected by another. The ijth
         #  entry of this matrix will be true iff person i can be infected by
         #  person j
-        possibilityMat = \
+        possibilityMat: np.ndarray = \
             (distMat <= self.infection_distance) * \
             (self.healths != Simulation.HEALTHY) * \
             (self.healths == Simulation.HEALTHY).reshape((self.pop_size,1))
@@ -90,6 +104,36 @@ class Simulation:
 
     # Updates the health of the healthy people to infected if they are near
     #  someone else who is infected
-    def tick_healths(self):
+    def tick_healths(self) -> None:
         self.healths[self.people_transmitting() > 0] = Simulation.INFECTED
 
+
+    # Utility function for plotting
+    # Take in the vector of healths and output the colors they should be
+    def health_colors(self) -> np.ndarray:
+        return np.vectorize({
+            Simulation.HEALTHY: 'blue',
+            Simulation.INFECTED: 'red',
+            Simulation.RECOVERED: 'green',
+            Simulation.DECEASED: 'black',
+        }.get)(self.healths)
+
+    # Functions for initializing and updating the map
+    def init_map(self):
+        self.scatter = \
+            self.map_ax.scatter(
+                x=self.positions[:,0],
+                y=self.positions[:,1],
+                c=self.health_colors())
+        return self.scatter
+    def tick_map(self, _):
+        self.tick_locations()
+        self.tick_healths()
+        self.scatter.set_facecolor(self.health_colors())
+        self.scatter.set_offsets(self.positions)
+        return self.scatter
+
+
+if __name__ == '__main__':
+    sim = Simulation(1000, .01, infection_distance=1)
+    plt.show()
