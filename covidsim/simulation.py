@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.image as image
+import matplotlib.widgets as widgets
 
 
 class Simulation:
@@ -31,10 +32,11 @@ class Simulation:
 
     def __init__(
       self,
-      pop_size: int,
-      initial_cases_prob: float,
+      pop_size: int = 1000,
+      initial_cases: int = 1,
       hospital_beds_ratio: float = .003,
-      infection_distance: np.float64 = 27.0,
+      infection_distance: np.float64 = 1.0,
+      infection_time: np.uint64 = 20,
       map_size: np.float64 = 100.0,
     ) -> None:
 
@@ -46,6 +48,7 @@ class Simulation:
         # Also the other parameters given
         self.map_size: np.float64 = map_size
         self.infection_distance: np.float64 = infection_distance
+        self.infection_time: np.uint64 = infection_time
         self.hospital_beds_ratio: float = hospital_beds_ratio
 
         # Position and health of everyone in the population
@@ -61,12 +64,14 @@ class Simulation:
                 fill_value=Simulation.HEALTHY,
                 dtype=Simulation.Health,
             )
+        self.infected_duration: np.ndarray = \
+            np.zeros( shape=(self.pop_size,), dtype=np.uint64 )
 
         # Note that we don't have to randomly draw from `self.healths`. The
         #  positions are all generated in the same way, and they're all
         #  indistinguishable from each other.
-        initial_cases: int = ceil( self.pop_size * initial_cases_prob )
         self.healths[0:initial_cases] = Simulation.INFECTED
+        self.infected_duration[0:initial_cases] = 1
 
         # Keep track of the statistics too
         self.case_stats: List[int] = []
@@ -78,6 +83,7 @@ class Simulation:
         # Add the map and statistics
         self.map_ax = self.fig.add_subplot(grid[0:,1:])
         self.stats_ax = self.fig.add_subplot(grid[0,0])
+        self.check_ax = self.fig.add_subplot(grid[1,0], frame_on=False)
         # Add labels
         self.stats_ax.set_xlabel('Time')
         self.stats_ax.set_ylabel('Cases')
@@ -91,6 +97,11 @@ class Simulation:
             animation.FuncAnimation(
                 self.fig,
                 self.tick_stats)
+
+        # Check buttons and simulation options
+        self.log_scale: bool = False
+        self.checks = widgets.CheckButtons(self.check_ax, ['Use Log Scale'])
+        self.checks.on_clicked(self.checkbox_handler)
 
 
     # Makes everyone take a step in a random direction with a given mean of
@@ -123,9 +134,13 @@ class Simulation:
 
 
     # Updates the health of the healthy people to infected if they are near
-    #  someone else who is infected
+    #  someone else who is infected. Also counts how long someone has been
+    #  infected and changes them to recovered if enough time has passed.
     def tick_healths(self) -> None:
         self.healths[self.people_transmitting() > 0] = Simulation.INFECTED
+
+        self.infected_duration[self.healths == Simulation.INFECTED] += 1
+        self.healths[self.infected_duration >= self.infection_time] = Simulation.RECOVERED
 
 
     # Utility function for plotting
@@ -164,10 +179,16 @@ class Simulation:
             np.count_nonzero(self.healths != Simulation.HEALTHY))
         self.stats_ax.clear()
         self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
-        self.stats_ax.plot(range(self.time), self.case_stats, 'blue')
+        self.stats_ax.set_yscale('log' if self.log_scale else 'linear')
+        return self.stats_ax.plot(range(self.time), self.case_stats, 'blue')
+
+    # Handler for all our checkbox actions
+    def checkbox_handler(self, box: str) -> None:
+        if box == 'Use Log Scale':
+            self.log_scale = not self.log_scale
 
 
 
 if __name__ == '__main__':
-    sim = Simulation(1000, .01, infection_distance=1)
+    sim = Simulation()
     plt.show()
