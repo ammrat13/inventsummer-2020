@@ -35,8 +35,10 @@ class Simulation:
       pop_size: int = 1000,
       initial_cases: int = 1,
       hospital_beds_ratio: float = .003,
-      infection_distance: np.float64 = 1.0,
+      infection_distance: np.float64 = 2.0,
       infection_time: np.uint64 = 20,
+      p_infect: float = 0.3,
+      p_recover: float = 0.7,
       map_size: np.float64 = 100.0,
     ) -> None:
 
@@ -49,6 +51,9 @@ class Simulation:
         self.map_size: np.float64 = map_size
         self.infection_distance: np.float64 = infection_distance
         self.infection_time: np.uint64 = infection_time
+        self.p_infect: float = p_infect
+        self.p_recover: float = p_recover
+        self.p_die: float = 1 - p_recover
         self.hospital_beds_ratio: float = hospital_beds_ratio
 
         # Position and health of everyone in the population
@@ -108,6 +113,7 @@ class Simulation:
     #  step length
     def tick_locations(self, step_mean: np.float64 = 2.0) -> None:
         # Move
+        # It actually doesn't matter if dead people move - they can't infect
         self.positions += \
             np.random.normal(
                 scale=np.sqrt(step_mean/2),
@@ -127,7 +133,7 @@ class Simulation:
         #  person j
         possibilityMat: np.ndarray = \
             (distMat <= self.infection_distance) * \
-            (self.healths != Simulation.HEALTHY) * \
+            (self.healths == Simulation.INFECTED) * \
             (self.healths == Simulation.HEALTHY).reshape((self.pop_size,1))
         # Sum up how many we can get infected from
         return np.sum(possibilityMat, axis=1)
@@ -137,10 +143,17 @@ class Simulation:
     #  someone else who is infected. Also counts how long someone has been
     #  infected and changes them to recovered if enough time has passed.
     def tick_healths(self) -> None:
-        self.healths[self.people_transmitting() > 0] = Simulation.INFECTED
-
+        # Compute who becomes infected at the current time
+        self.healths[np.random.binomial(self.people_transmitting(), self.p_infect) > 0] = Simulation.INFECTED
+        # Compute who has been infected for a long time
         self.infected_duration[self.healths == Simulation.INFECTED] += 1
-        self.healths[self.infected_duration >= self.infection_time] = Simulation.RECOVERED
+        infection_done = self.infected_duration >= self.infection_time
+        # Figure out who lives and who dies
+        # Recovery happens with probability `p_recover`
+        self.healths[infection_done] = Simulation.DECEASED
+        self.healths[np.random.binomial(infection_done, self.p_recover) > 0] = Simulation.RECOVERED
+        # If they are recovered or deceased, we don't want to reroll their status
+        self.infected_duration[infection_done] = 0
 
 
     # Utility function for plotting
