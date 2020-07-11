@@ -3,7 +3,7 @@
 
 # Nice to have type hinting
 from __future__ import annotations
-from typing import List
+from typing import List, Tuple
 
 # Needed for some functions
 from math import ceil
@@ -79,7 +79,8 @@ class Simulation:
         self.infected_duration[0:initial_cases] = 1
 
         # Keep track of the statistics too
-        self.case_stats: List[int] = []
+        self.currently_infected: List[int] = []
+        self.ever_infected: List[int] = []
 
         # Create the figure for plotting
         self.fig = plt.figure(figsize=(16,9))
@@ -105,20 +106,37 @@ class Simulation:
 
         # Check buttons and simulation options
         self.log_scale: bool = False
-        self.checks = widgets.CheckButtons(self.check_ax, ['Use Log Scale'])
+        self.p_movement: float = 1.0
+        self.checks = widgets.CheckButtons(self.check_ax, [
+            'Use Log Scale',
+            'Total Social Distancing',
+            'Partial Social Distancing',
+        ])
         self.checks.on_clicked(self.checkbox_handler)
 
 
     # Makes everyone take a step in a random direction with a given mean of
     #  step length
     def tick_locations(self, step_mean: np.float64 = 2.0) -> None:
-        # Move
-        # It actually doesn't matter if dead people move - they can't infect
-        self.positions += \
+        # Compute our step if we move
+        # Note the formula for the standard deviation. Distance travelled is
+        #  the square-root of the sum of the squares of two normal random
+        #  variables, giving a chi-squared distribution.
+        dpos = \
             np.random.normal(
                 scale=np.sqrt(step_mean/2),
                 size=(self.pop_size,2))
+        # We don't want to move everyone
+        # Dead people don't move
+        # For everyone else, we roll some probability of moving, and don't move
+        #  if they miss that roll
+        dpos[
+            (self.healths == Simulation.DECEASED) | \
+            (np.random.binomial(1, self.p_movement, size=(self.pop_size,)) == 0)
+        ] = np.array([0,0])
+        # Acutally update the positions
         # Make sure we don't step outside the map boundary
+        self.positions += dpos
         self.positions = np.clip(self.positions, 0.0, self.map_size)
 
 
@@ -187,21 +205,30 @@ class Simulation:
 
     # Same for the statistics
     def tick_stats(self, _):
+        # Compute the statistics
         self.time += 1
-        self.case_stats.append(
+        self.currently_infected.append(
+            np.count_nonzero(self.healths == Simulation.INFECTED))
+        self.ever_infected.append(
             np.count_nonzero(self.healths != Simulation.HEALTHY))
+        # Plot them
         self.stats_ax.clear()
         self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
         self.stats_ax.set_yscale('log' if self.log_scale else 'linear')
-        return self.stats_ax.plot(range(self.time), self.case_stats, 'blue')
+        self.stats_ax.plot(range(self.time), self.currently_infected, 'red')
+        self.stats_ax.plot(range(self.time), self.ever_infected, 'black')
 
     # Handler for all our checkbox actions
-    def checkbox_handler(self, box: str) -> None:
-        if box == 'Use Log Scale':
-            self.log_scale = not self.log_scale
+    def checkbox_handler(self, _) -> None:
+        # Get the state of the buttons
+        state: Tuple[bool, bool, bool] = self.checks.get_status()
+        # Set our model accordingly
+        self.log_scale = state[0]
+        self.p_movement = 0.0 if state[1] else 0.6 if state[2] else 1.0
 
 
 
 if __name__ == '__main__':
+    print(f"Seed: {np.random.get_state()}")
     sim = Simulation()
     plt.show()
