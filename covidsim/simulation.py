@@ -29,7 +29,7 @@ class Simulation:
 
     def __init__(
       self,
-      pop_size: int = 1000,
+      pop_size: int = 5000,
       initial_cases: int = 1,
       hospital_beds_ratio: float = .003,
       infection_distance: np.float64 = 2.0,
@@ -79,6 +79,7 @@ class Simulation:
         self.infected: List[int] = []
         self.recovered: List[int] = []
         self.dead: List[int] = []
+        self.new_cases: List[int] = []
 
         # Create the figure for plotting
         self.fig = plt.figure(figsize=(16,9))
@@ -87,10 +88,13 @@ class Simulation:
         # Add the map and statistics
         self.map_ax = self.fig.add_subplot(grid[0:,1:])
         self.stats_ax = self.fig.add_subplot(grid[0,0])
-        self.check_ax = self.fig.add_subplot(grid[1,0], frame_on=False)
+        self.traj_ax = self.fig.add_subplot(grid[1,0])
+        self.check_ax = self.fig.add_subplot(grid[2,0], frame_on=False)
         # Add labels
         self.stats_ax.set_xlabel('Time')
         self.stats_ax.set_ylabel('Cases')
+        self.traj_ax.set_xlabel('Log(Total Cases)')
+        self.traj_ax.set_ylabel('Log(New Cases)')
         # Call for updates
         self.map_ani = \
             animation.FuncAnimation(
@@ -212,6 +216,8 @@ class Simulation:
         cum_infected = self.infected
         cum_recovered = list(map(sum, zip(cum_infected, self.recovered)))
         cum_dead = list(map(sum, zip(cum_recovered, self.dead)))
+        # Some statistics depend on these cumulatives, so compute them now
+        self.new_cases.append(cum_dead[-1] - (cum_dead[-2] if len(cum_dead) >= 2 else 0))
         # Plot them
         self.stats_ax.clear()
         self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
@@ -219,6 +225,10 @@ class Simulation:
         self.stats_ax.fill_between(range(self.time), cum_infected, 0, color='red')
         self.stats_ax.fill_between(range(self.time), cum_recovered, cum_infected, color='green')
         self.stats_ax.fill_between(range(self.time), cum_dead, cum_recovered, color='black')
+        # Also update the trajectory
+        self.traj_ax.set_xscale('log')
+        self.traj_ax.set_yscale('log')
+        self.traj_ax.plot(cum_dead, self.new_cases, color='red')
 
     # Handler for all our checkbox actions
     def checkbox_handler(self, _) -> None:
