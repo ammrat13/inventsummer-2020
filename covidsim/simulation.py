@@ -1,6 +1,3 @@
-# Section 6: Set Up the Simulation
-# ================================
-
 # Nice to have type hinting
 from __future__ import annotations
 from typing import List, Tuple
@@ -79,8 +76,9 @@ class Simulation:
         self.infected_duration[0:initial_cases] = 1
 
         # Keep track of the statistics too
-        self.currently_infected: List[int] = []
-        self.ever_infected: List[int] = []
+        self.infected: List[int] = []
+        self.recovered: List[int] = []
+        self.dead: List[int] = []
 
         # Create the figure for plotting
         self.fig = plt.figure(figsize=(16,9))
@@ -207,16 +205,20 @@ class Simulation:
     def tick_stats(self, _):
         # Compute the statistics
         self.time += 1
-        self.currently_infected.append(
-            np.count_nonzero(self.healths == Simulation.INFECTED))
-        self.ever_infected.append(
-            np.count_nonzero(self.healths != Simulation.HEALTHY))
+        self.infected.append(np.count_nonzero(self.healths == Simulation.INFECTED))
+        self.recovered.append(np.count_nonzero(self.healths == Simulation.RECOVERED))
+        self.dead.append(np.count_nonzero(self.healths == Simulation.DECEASED))
+        # Calculate the cumulatives for the stacked-area plot
+        cum_infected = self.infected
+        cum_recovered = list(map(sum, zip(cum_infected, self.recovered)))
+        cum_dead = list(map(sum, zip(cum_recovered, self.dead)))
         # Plot them
         self.stats_ax.clear()
         self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
         self.stats_ax.set_yscale('log' if self.log_scale else 'linear')
-        self.stats_ax.plot(range(self.time), self.currently_infected, 'red')
-        self.stats_ax.plot(range(self.time), self.ever_infected, 'black')
+        self.stats_ax.fill_between(range(self.time), cum_infected, 0, color='red')
+        self.stats_ax.fill_between(range(self.time), cum_recovered, cum_infected, color='green')
+        self.stats_ax.fill_between(range(self.time), cum_dead, cum_recovered, color='black')
 
     # Handler for all our checkbox actions
     def checkbox_handler(self, _) -> None:
