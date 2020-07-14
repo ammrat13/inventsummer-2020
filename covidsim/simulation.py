@@ -116,12 +116,14 @@ class Simulation:
                 self.tick_stats)
 
         # Check buttons and simulation options
+        self.paused: bool = False
         self.log_scale: bool = False
         self.p_movement: float = 1.0
         self.checks = widgets.CheckButtons(self.check_ax, [
             'Use Log Scale',
             'Total Social Distancing',
             'Partial Social Distancing',
+            'Paused',
         ])
         self.checks.on_clicked(self.checkbox_handler)
 
@@ -208,42 +210,45 @@ class Simulation:
                 c=self.health_colors())
         return self.scatter
     def tick_map(self, _):
-        self.tick_locations()
-        self.tick_healths()
-        self.scatter.set_facecolor(self.health_colors())
-        self.scatter.set_offsets(self.positions)
-        return self.scatter
+        if not self.paused:
+            self.tick_locations()
+            self.tick_healths()
+            self.scatter.set_facecolor(self.health_colors())
+            self.scatter.set_offsets(self.positions)
+            return self.scatter
 
     # Same for the statistics
     def tick_stats(self, _):
-        # Compute the statistics
-        self.time += 1
-        self.infected.append(np.count_nonzero(self.healths == Simulation.INFECTED))
-        self.recovered.append(np.count_nonzero(self.healths == Simulation.RECOVERED))
-        self.dead.append(np.count_nonzero(self.healths == Simulation.DECEASED))
-        # Calculate the cumulatives for the stacked-area plot
-        cum_infected = self.infected
-        cum_recovered = list(map(sum, zip(cum_infected, self.recovered)))
-        cum_dead = list(map(sum, zip(cum_recovered, self.dead)))
-        # Some statistics depend on these cumulatives, so compute them now
-        self.new_cases.append(cum_dead[-1] - (cum_dead[-2] if len(cum_dead) >= 2 else 0))
-        # Plot them
-        self.stats_ax.clear()
-        self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
-        self.stats_ax.set_yscale('log' if self.log_scale else 'linear')
-        self.stats_ax.fill_between(range(self.time), cum_infected, 0, color='red')
-        self.stats_ax.fill_between(range(self.time), cum_recovered, cum_infected, color='green')
-        self.stats_ax.fill_between(range(self.time), cum_dead, cum_recovered, color='black')
-        # Also update the trajectory
-        self.traj_ax.set_xscale('log')
-        self.traj_ax.set_yscale('log')
-        self.traj_ax.plot(cum_dead, self.new_cases, color='red')
+        if not self.paused:
+            # Compute the statistics
+            self.time += 1
+            self.infected.append(np.count_nonzero(self.healths == Simulation.INFECTED))
+            self.recovered.append(np.count_nonzero(self.healths == Simulation.RECOVERED))
+            self.dead.append(np.count_nonzero(self.healths == Simulation.DECEASED))
+            # Calculate the cumulatives for the stacked-area plot
+            cum_infected = self.infected
+            cum_recovered = list(map(sum, zip(cum_infected, self.recovered)))
+            cum_dead = list(map(sum, zip(cum_recovered, self.dead)))
+            # Some statistics depend on these cumulatives, so compute them now
+            self.new_cases.append(cum_dead[-1] - (cum_dead[-2] if len(cum_dead) >= 2 else 0))
+            # Plot them
+            self.stats_ax.clear()
+            self.stats_ax.axhline(y=self.hospital_beds_ratio * self.pop_size, color='red', linestyle='--')
+            self.stats_ax.set_yscale('log' if self.log_scale else 'linear')
+            self.stats_ax.fill_between(range(self.time), cum_infected, 0, color='red')
+            self.stats_ax.fill_between(range(self.time), cum_recovered, cum_infected, color='green')
+            self.stats_ax.fill_between(range(self.time), cum_dead, cum_recovered, color='black')
+            # Also update the trajectory
+            self.traj_ax.set_xscale('log')
+            self.traj_ax.set_yscale('log')
+            self.traj_ax.plot(cum_dead, self.new_cases, color='red')
 
     # Handler for all our checkbox actions
     def checkbox_handler(self, _) -> None:
         # Get the state of the buttons
-        state: Tuple[bool, bool, bool] = self.checks.get_status()
+        state: Tuple[bool, bool, bool, bool] = self.checks.get_status()
         # Set our model accordingly
+        self.paused = state[3]
         self.log_scale = state[0]
         self.p_movement = 0.0 if state[1] else 0.6 if state[2] else 1.0
 
