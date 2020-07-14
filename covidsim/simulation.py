@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.image as image
 import matplotlib.widgets as widgets
+import matplotlib.patches as mpatches
 
 
 class Simulation:
@@ -83,6 +84,14 @@ class Simulation:
 
         # Create the figure for plotting
         self.fig = plt.figure(figsize=(16,9))
+        # Legend
+        # Keep it on the whole figure since the colors apply to everything
+        self.fig.legend(handles=[
+            mpatches.Patch(color='blue', label='Healthy'),
+            mpatches.Patch(color='red', label='Infected'),
+            mpatches.Patch(color='green', label='Recovered'),
+            mpatches.Patch(color='black', label='Deceased'),
+        ], loc='lower left')
         # Add a grid for layout
         grid = self.fig.add_gridspec(nrows=3, ncols=4)
         # Add the map and statistics
