@@ -200,7 +200,7 @@ class Simulation:
     # Functions for initializing and updating the map
     def init_map(self):
         self.map_ax.imshow(
-            image.imread('map.png'),
+            image.imread('img/map.png'),
             extent=[0, self.map_size, 0, self.map_size],
             aspect='auto')
         self.scatter = \
