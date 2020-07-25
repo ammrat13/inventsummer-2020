@@ -1,8 +1,11 @@
 #include "io.h"
 
 void setup() {
-  collisionBuzzer.beep();
+  display.init();
 }
 
 void loop() {
+  display.beginTransaction();
+  display.drawTest();
+  display.commitTransaction();
 }
