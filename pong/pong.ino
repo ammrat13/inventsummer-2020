@@ -8,6 +8,7 @@ void setup() {
   pinMode(UP_BUT_PIN, INPUT_PULLUP);
   pinMode(DN_BUT_PIN, INPUT_PULLUP);
 
+  SCREEN.setBusClock(1000000);
   SCREEN.begin();
   SCREEN.firstPage();
 }

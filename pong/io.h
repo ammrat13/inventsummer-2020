@@ -22,7 +22,7 @@ const uint32_t UP_BUT_PIN = 16;
 const uint32_t DN_BUT_PIN = 17;
 
 // For U8g2 Screen
-extern U8G2_SSD1327_EA_W128128_F_HW_I2C SCREEN;
+extern U8G2_SSD1327_MIDAS_128X128_F_HW_I2C SCREEN;
 
 
 // Include guard
