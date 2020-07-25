@@ -1,9 +1,8 @@
 #include "io.h"
 
 void setup() {
+  collisionBuzzer.beep();
 }
 
 void loop() {
-    display.drawTest();
-    display.commit();
 }
