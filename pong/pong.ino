@@ -1,10 +1,4 @@
-// Define the pins we have IO on
-#define WN_LED_PIN (1)
-#define LS_LED_PIN (2)
-#define BUZZER_PIN (7)
-#define UP_BUT_PIN (16)
-#define DN_BUT_PIN (17)
-
+#include "io.h"
 
 void setup() {
   // Set the pin modes as appropriate
@@ -14,10 +8,13 @@ void setup() {
   pinMode(UP_BUT_PIN, INPUT_PULLUP);
   pinMode(DN_BUT_PIN, INPUT_PULLUP);
 
-  // Write stuff so we know it's working
-  digitalWrite(WN_LED_PIN, HIGH);
-  digitalWrite(LS_LED_PIN, HIGH);
-  tone(BUZZER_PIN, 500);
+  SCREEN.begin();
+  SCREEN.firstPage();
 }
 
-void loop() {}
+void loop() {
+  digitalWrite(WN_LED_PIN, digitalRead(UP_BUT_PIN));
+  SCREEN.setFont(u8g2_font_ncenB14_tr);
+  SCREEN.drawStr(0,15,"Hello World!");
+  SCREEN.nextPage();
+}
