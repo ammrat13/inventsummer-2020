@@ -4,10 +4,10 @@
 
 
 #include "io.h"
-#include "score.h"
+#include "ball.h"
 
 
-GameComponents::Score s;
+GameComponents::Ball b;
 
 void setup() {
   // Initialize all the IO
@@ -22,9 +22,11 @@ void setup() {
 
 
 void loop() {
-  s.score(0);
-  s.score(1);
+  b.tick();
   IO::I2C_DISPLAY.beginTransaction();
-  s.render();
+  b.render();
   IO::I2C_DISPLAY.commitTransaction();
+  if(b.roundWinner() != NULL) {
+    b.reset();
+  }
 }

@@ -3,7 +3,10 @@
 */
 
 
+#include <Arduino.h>
+#include "game.h"
 #include "score.h"
+#include "io.h"
 
 
 GameComponents::Score::Score(void) {

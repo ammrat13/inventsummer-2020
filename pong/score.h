@@ -8,9 +8,8 @@
 #ifndef SCORE_H
 #define SCORE_H
 
-// Required for types and implementation
+// Required for types
 #include "game.h"
-#include "io.h"
 
 
 namespace GameComponents {

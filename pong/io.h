@@ -9,8 +9,6 @@
 #define IO_H
 
 
-// Required for Arduino stuff
-#include <Arduino.h>
 // Required for screen IO
 #include <U8g2lib.h>
 
