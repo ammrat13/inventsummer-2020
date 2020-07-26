@@ -1,6 +1,6 @@
 /*
-    Implementation file for our IO library. It defines the methods given in all
-    the classes, then calls the appropriate constructors.
+  Implementation file for our IO library. It defines the methods given in all
+  the classes, then calls the appropriate constructors.
 */
 
 #include "io.h"
