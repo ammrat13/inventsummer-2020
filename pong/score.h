@@ -9,7 +9,7 @@
 #define SCORE_H
 
 // Required for types
-#include "game.h"
+#include "players.h"
 
 
 namespace GameComponents {

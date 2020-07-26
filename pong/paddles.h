@@ -10,7 +10,7 @@
 
 
 // Required for typing
-#include "game.h"
+#include "players.h"
 #include "ball.h"
 
 

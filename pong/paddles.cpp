@@ -4,14 +4,14 @@
 
 
 #include <Arduino.h>
-#include "game.h"
+#include "players.h"
 #include "paddles.h"
 #include "ball.h"
 #include "io.h"
 
 
 // Constants for the paddles
-const uint8_t PADDLE_RADIUS = 8;
+const uint8_t PADDLE_RADIUS = 10;
 const uint8_t PADDLE_WIDTH = 3;
 
 

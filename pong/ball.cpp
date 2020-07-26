@@ -4,9 +4,13 @@
 
 
 #include <Arduino.h>
-#include "game.h"
+#include "players.h"
 #include "ball.h"
 #include "io.h"
+
+
+// Constants for the ball
+const uint8_t BALL_RADIUS = 2;
 
 
 // Handlers for initialization
@@ -50,7 +54,7 @@ void GameComponents::Ball::tick(void) {
 
 
 void GameComponents::Ball::render(void) {
-  IO::I2C_DISPLAY.canvas.drawDisc(this->x, this->y, 3);
+  IO::I2C_DISPLAY.canvas.drawDisc(this->x, this->y, BALL_RADIUS);
 }
 
 

@@ -8,8 +8,8 @@
 #ifndef BALL_H
 #define BALL_H
 
-// Required for types and IO
-#include "game.h"
+// Required for types
+#include "players.h"
 
 
 namespace GameComponents {

@@ -9,12 +9,24 @@
 #define GAME_H
 
 
+#include "players.h"
+#include "score.h"
+#include "ball.h"
+#include "paddles.h"
+
+
 namespace Game {
 
-  // For clarity, we define a player type
-  typedef const bool Player;
-  const Player PLAYER_0 = 0;
-  const Player PLAYER_1 = 1;
+  class GameModel {
+    private:
+      GameComponents::Score score;
+      GameComponents::Ball ball;
+      GameComponents::Paddles paddles;
+    public:
+      GameModel(void);
+      void init(void);
+      void frame(void);
+  };
 
 }
 
