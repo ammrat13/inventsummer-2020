@@ -23,20 +23,20 @@ const uint8_t *DISP_FONT = u8g2_font_freedoomr10_mu;
 
 // Implementation for AlertLED
 
-AlertLED::AlertLED(uint32_t pin)
+IO::AlertLED::AlertLED(uint32_t pin)
 : ledPin(pin) {
   // Rest of initialization done in init()
   // We have to do this because Arduino doesn't take kindly to constructors
 }
 
-void AlertLED::init(void) {
+void IO::AlertLED::init(void) {
   pinMode(this->ledPin, OUTPUT);
   digitalWrite(this->ledPin, LOW);
 }
 
 // Note that this function blocks
 // We do this since we can't have multiple tone() at a time
-void AlertLED::flash(void) {
+void IO::AlertLED::flash(void) {
   const unsigned long TRANSITION_DELAY = 150;
   for(uint8_t i = 0; i < 4; i++) {
     digitalWrite(this->ledPin, HIGH);
@@ -49,75 +49,71 @@ void AlertLED::flash(void) {
 
 // Implementation for Buzzer
 
-Buzzer::Buzzer(uint32_t pin)
+IO::Buzzer::Buzzer(uint32_t pin)
 : buzzerPin(pin) {
   // Rest of initialization done in init()
   // We have to do this because Arduino doesn't take kindly to constructors
 }
 
-void Buzzer::init(void) {
+void IO::Buzzer::init(void) {
   pinMode(this->buzzerPin, OUTPUT);
 }
 
-void Buzzer::beep(void) {
+void IO::Buzzer::beep(void) {
   tone(this->buzzerPin, 300, 200);
 }
 
 
 // Implementation for Button
 
-Button::Button(uint32_t pin)
+IO::Button::Button(uint32_t pin)
 : buttonPin(pin) {
   // Rest of initialization done in init()
   // We have to do this because Arduino doesn't take kindly to constructors
 }
 
-void Button::init(void) {
+void IO::Button::init(void) {
   pinMode(this->buttonPin, INPUT_PULLUP);
 }
 
-bool Button::isPressed(void) {
+bool IO::Button::isPressed(void) {
   return digitalRead(this->buttonPin) == LOW;
 }
 
 
 // Implementation for the display
 
-Display::Display(const uint32_t c, const u8g2_cb_t *r, const uint8_t *f)
-: u8g2(r)
-, clockSpeed(c)
-, font(f) {
+IO::Display::Display(const uint32_t c, const u8g2_cb_t *r, const uint8_t *f)
+: clockSpeed(c)
+, font(f)
+, canvas(r) {
   // Rest of initialization done in init()
   // We have to do this because Arduino doesn't take kindly to constructors
 }
 
-void Display::init(void) {
-  this->u8g2.setBusClock(this->clockSpeed);
-  this->u8g2.begin();
+void IO::Display::init(void) {
+  this->canvas.setBusClock(this->clockSpeed);
+  this->canvas.begin();
 }
 
-void Display::beginTransaction(void) {
-  this->u8g2.firstPage();
+void IO::Display::beginTransaction(void) {
+  this->canvas.firstPage();
+  this->canvas.setFont(this->font);
 }
 
-void Display::commitTransaction(void) {
-  this->u8g2.nextPage();
+void IO::Display::commitTransaction(void) {
+  this->canvas.nextPage();
 }
 
-void Display::rollbackTransaction(void) {
-  this->u8g2.clear();
-}
-
-void Display::drawTest() {
-  this->u8g2.setFont(this->font);
-  this->u8g2.drawStr(0, 128, "HELLO WORLD");
+void IO::Display::rollbackTransaction(void) {
+  this->canvas.clear();
 }
 
 
 // Instantiate everything
-AlertLED wnLed(WN_LED_PIN);
-AlertLED lsLed(LS_LED_PIN);
-Buzzer collisionBuzzer(BUZZER_PIN);
-Button upButton(UP_BUTTON_PIN);
-Button dnButton(DN_BUTTON_PIN);
-Display display(DISP_CLOCK_SPEED, DISP_ROT, DISP_FONT);
+IO::AlertLED IO::WN_LED(WN_LED_PIN);
+IO::AlertLED IO::LS_LED(LS_LED_PIN);
+IO::Buzzer IO::COLLISION_BUZZER(BUZZER_PIN);
+IO::Button IO::UP_BUTTON(UP_BUTTON_PIN);
+IO::Button IO::DN_BUTTON(DN_BUTTON_PIN);
+IO::Display IO::I2C_DISPLAY(DISP_CLOCK_SPEED, DISP_ROT, DISP_FONT);
