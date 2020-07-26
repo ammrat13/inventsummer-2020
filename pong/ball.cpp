@@ -62,6 +62,6 @@ Game::Player *GameComponents::Ball::roundWinner(void) {
   } else if(this->x == 0) {
     return &Game::PLAYER_1;
   } else {
-    return (Game::Player *const) 0;
+    return (Game::Player *const) NULL;
   }
 }
