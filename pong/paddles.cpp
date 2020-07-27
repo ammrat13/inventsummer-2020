@@ -63,13 +63,13 @@ void GameComponents::Paddles::tick(GameComponents::Ball *b) {
 
 void GameComponents::Paddles::render(void) {
   // Draw both P0 and P1's
-  IO::I2C_DISPLAY.canvas.drawBox(
+  IO::I2C_DISPLAY.canvas.drawFrame(
     0,
     paddleY[0] - PADDLE_RADIUS,
     PADDLE_WIDTH,
     2 * PADDLE_RADIUS
   );
-  IO::I2C_DISPLAY.canvas.drawBox(
+  IO::I2C_DISPLAY.canvas.drawFrame(
     127 - PADDLE_WIDTH,
     paddleY[1] - PADDLE_RADIUS,
     PADDLE_WIDTH,

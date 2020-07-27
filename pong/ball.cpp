@@ -42,14 +42,6 @@ void GameComponents::Ball::tick(void) {
     this->yDot *= -1;
     IO::COLLISION_BUZZER.beep();
   }
-  // Clamp the x to the edges to check for loss
-  if(this->x < 0) {
-    if(this->xDot < 0) {
-      this->x = 0;
-    } else {
-      this->x = 127;
-    }
-  }
 }
 
 
@@ -61,11 +53,12 @@ void GameComponents::Ball::render(void) {
 // Check for win condition
 // Null means noone has won yet
 Game::Player *GameComponents::Ball::roundWinner(void) {
-  if(this->x == 127) {
-    return &Game::PLAYER_0;
-  } else if(this->x == 0) {
-    return &Game::PLAYER_1;
-  } else {
-    return (Game::Player *const) NULL;
+  if(this->x < 0) {
+    if(this->xDot > 0) {
+      return &Game::PLAYER_0;
+    } else if(this->xDot < 0) {
+      return &Game::PLAYER_1;
+    }
   }
+  return (Game::Player *const) NULL;
 }
