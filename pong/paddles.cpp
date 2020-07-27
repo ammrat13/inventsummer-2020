@@ -12,7 +12,8 @@
 
 // Constants for the paddles
 const uint8_t PADDLE_RADIUS = 10;
-const uint8_t PADDLE_WIDTH = 3;
+const uint8_t PADDLE_WIDTH = 2;
+const uint8_t PADDLE_SPEED = 5;
 
 
 // Initialization
@@ -35,7 +36,7 @@ const MoveDirection UP = -1;
 const MoveDirection DN = 1;
 void movePlayer(int8_t *paddleY, Game::Player p, MoveDirection d) {
   // Compute the new position after stepping the specified amount
-  int8_t newY = paddleY[p] + d * 7;
+  int8_t newY = paddleY[p] + d * PADDLE_SPEED;
   if(newY < PADDLE_RADIUS || newY > 127 - PADDLE_RADIUS) {
     if(d == UP) {
       newY = PADDLE_RADIUS;
@@ -57,6 +58,42 @@ void GameComponents::Paddles::tick(GameComponents::Ball *b) {
   }
   if(IO::DN_BUTTON.isPressed()) {
     movePlayer(this->paddleY, Game::PLAYER_0, DN);
+  }
+
+  // AI
+  if(b->y < paddleY[Game::PLAYER_1]) {
+    movePlayer(this->paddleY, Game::PLAYER_1, UP);
+  } else {
+    movePlayer(this->paddleY, Game::PLAYER_1, DN);
+  }
+
+  // Check for collision with the active paddle
+  // Flip the coordinate system first if needed
+  bool flip = b->xDot > 0;
+  if(flip) {
+    b->x = -b->x + 127;
+    b->xDot *= -1;
+  }
+  // Do collision detection if needed
+  if(b->x < 0) {
+    // Approximate the position of the ball at the time of collision
+    // We don't want to use floats
+    int8_t bY = b->y - b->yDot / 2;
+    // Get the position of the active paddle at the time of the collision
+    int8_t pY = paddleY[flip ? Game::PLAYER_1 : Game::PLAYER_0];
+    // Ensure we were in range for the collision
+    if(abs(bY - pY) <= PADDLE_RADIUS) {
+      // Set the position and velocity of the ball
+      b->x *= -1;
+      b->xDot *= -1;
+      // Beep the buzzer
+      IO::COLLISION_BUZZER.beep();
+    }
+  }
+  // Flip back if we flipped
+  if(flip) {
+    b->x = -b->x + 127;
+    b->xDot *= -1;
   }
 }
 
