@@ -11,7 +11,7 @@
 
 
 // Constants for the paddles
-const uint8_t PADDLE_RADIUS = 10;
+const uint8_t PADDLE_HALF_HEIGHT = 10;
 const uint8_t PADDLE_WIDTH = 2;
 const uint8_t PADDLE_SPEED = 5;
 
@@ -37,11 +37,11 @@ const MoveDirection DN = 1;
 void movePlayer(int8_t *paddleY, Game::Player p, MoveDirection d) {
   // Compute the new position after stepping the specified amount
   int8_t newY = paddleY[p] + d * PADDLE_SPEED;
-  if(newY < PADDLE_RADIUS || newY > 127 - PADDLE_RADIUS) {
+  if(newY < PADDLE_HALF_HEIGHT || newY > 127 - PADDLE_HALF_HEIGHT) {
     if(d == UP) {
-      newY = PADDLE_RADIUS;
+      newY = PADDLE_HALF_HEIGHT;
     } else if (d == DN) {
-      newY = 127 - PADDLE_RADIUS;
+      newY = 127 - PADDLE_HALF_HEIGHT;
     }
   }
   // Assign
@@ -75,16 +75,16 @@ void GameComponents::Paddles::tick(GameComponents::Ball *b) {
     b->xDot *= -1;
   }
   // Do collision detection if needed
-  if(b->x < 0) {
+  if(b->x < PADDLE_WIDTH) {
     // Approximate the position of the ball at the time of collision
     // We don't want to use floats
     int8_t bY = b->y - b->yDot / 2;
     // Get the position of the active paddle at the time of the collision
     int8_t pY = paddleY[flip ? Game::PLAYER_1 : Game::PLAYER_0];
     // Ensure we were in range for the collision
-    if(abs(bY - pY) <= PADDLE_RADIUS) {
+    if(abs(bY - pY) <= PADDLE_HALF_HEIGHT) {
       // Set the position and velocity of the ball
-      b->x *= -1;
+      b->x = 2*PADDLE_WIDTH - b->x;
       b->xDot *= -1;
       // Beep the buzzer
       IO::COLLISION_BUZZER.beep();
@@ -102,14 +102,14 @@ void GameComponents::Paddles::render(void) {
   // Draw both P0 and P1's
   IO::I2C_DISPLAY.canvas.drawFrame(
     0,
-    paddleY[0] - PADDLE_RADIUS,
+    paddleY[0] - PADDLE_HALF_HEIGHT,
     PADDLE_WIDTH,
-    2 * PADDLE_RADIUS
+    2 * PADDLE_HALF_HEIGHT
   );
   IO::I2C_DISPLAY.canvas.drawFrame(
-    127 - PADDLE_WIDTH,
-    paddleY[1] - PADDLE_RADIUS,
+    128 - PADDLE_WIDTH,
+    paddleY[1] - PADDLE_HALF_HEIGHT,
     PADDLE_WIDTH,
-    2 * PADDLE_RADIUS
+    2 * PADDLE_HALF_HEIGHT
   );
 }

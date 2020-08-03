@@ -10,7 +10,7 @@
 
 
 // Constants for the ball
-const uint8_t BALL_RADIUS = 2;
+const uint8_t BALL_RADIUS = 10;
 
 
 // Handlers for initialization
