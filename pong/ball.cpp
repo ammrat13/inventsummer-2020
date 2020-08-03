@@ -33,14 +33,24 @@ void GameComponents::Ball::tick(void) {
   // Take a step in the direction we're going
   this->x += this->xDot;
   this->y += this->yDot;
+
   // Keep ourselves in bounds on y
-  // Also play a tone on collission
-  if(this->y < 0) {
-    // Use bitwise not instead of negation for coordinate so we can guarantee
-    //  the result to be non-negative
-    this->y = ~this->y;
+  // Also play a tone if we happen to get a collision
+  // Start by flipping the coordinate system so the wall is at y=0
+  // Note that we don't flip the velocity because we don't need to
+  bool flip = this->yDot > 0;
+  if(flip) {
+    this->y = 127 - this->y;
+  }
+  // Do the collision check
+  if(this->y < BALL_RADIUS) {
+    this->y = 2*BALL_RADIUS - this->y;
     this->yDot *= -1;
     IO::COLLISION_BUZZER.beep();
+  }
+  // Flip back if we flipped the first time
+  if(flip) {
+    this->y = 127 - this->y;
   }
 }
 
