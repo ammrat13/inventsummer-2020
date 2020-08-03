@@ -16,6 +16,9 @@ namespace GameComponents {
 
   class Ball {
     public:
+      // We need this constant for collision handling elsewhere
+      static const uint8_t BALL_RADIUS;
+
       int8_t x;
       int8_t y;
       int8_t xDot;

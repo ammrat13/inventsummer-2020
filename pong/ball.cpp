@@ -10,7 +10,7 @@
 
 
 // Constants for the ball
-const uint8_t BALL_RADIUS = 10;
+const uint8_t GameComponents::Ball::BALL_RADIUS = 3;
 
 
 // Handlers for initialization
@@ -63,7 +63,7 @@ void GameComponents::Ball::render(void) {
 // Check for win condition
 // Null means noone has won yet
 Game::Player *GameComponents::Ball::roundWinner(void) {
-  if(this->x < 0) {
+  if(this->x < GameComponents::Ball::BALL_RADIUS) {
     if(this->xDot > 0) {
       return &Game::PLAYER_0;
     } else if(this->xDot < 0) {

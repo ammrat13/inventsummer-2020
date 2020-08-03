@@ -75,16 +75,16 @@ void GameComponents::Paddles::tick(GameComponents::Ball *b) {
     b->xDot *= -1;
   }
   // Do collision detection if needed
-  if(b->x < PADDLE_WIDTH) {
+  if(b->x < PADDLE_WIDTH + GameComponents::Ball::BALL_RADIUS) {
     // Approximate the position of the ball at the time of collision
     // We don't want to use floats
     int8_t bY = b->y - b->yDot / 2;
     // Get the position of the active paddle at the time of the collision
     int8_t pY = paddleY[flip ? Game::PLAYER_1 : Game::PLAYER_0];
     // Ensure we were in range for the collision
-    if(abs(bY - pY) <= PADDLE_HALF_HEIGHT) {
+    if(abs(bY - pY) <= PADDLE_HALF_HEIGHT + GameComponents::Ball::BALL_RADIUS) {
       // Set the position and velocity of the ball
-      b->x = 2*PADDLE_WIDTH - b->x;
+      b->x = 2*PADDLE_WIDTH + 2*GameComponents::Ball::BALL_RADIUS - b->x;
       b->xDot *= -1;
       // Beep the buzzer
       IO::COLLISION_BUZZER.beep();
